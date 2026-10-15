@@ -50,6 +50,24 @@ SUBCATEGORY_RULES = {
     ],
 }
 
+HIGH_CONFIDENCE_RULES = [
+    ("Security", r"\bphishing\b|\bphishing email\b|\bmalware\b|\bvirus\b|\bdata breach\b|\bdata leak\b|\bunauthori[sz]ed access\b|\bsuspicious login\b"),
+    ("VPN", r"\bvpn\b"),
+    ("Password Reset", r"\bforgot (my )?password\b|\bpassword reset\b|\breset (my )?password\b|\baccount locked\b|\bcredentials expired\b"),
+    ("Email", r"\boutlook\b|\bmailbox\b|\bcannot send (an )?email\b|\bcannot receive (an )?email\b|\bsend and receive email\b"),
+    ("Network", r"\bwi[- ]?fi\b|\bno internet\b|\bdns\b|\bnetwork outage\b|\bnetwork keeps? disconnecting\b"),
+    ("Software", r"\bexcel\b.*\bcrash|\bcrash.*\bexcel\b|\bapplication crash\b|\bsoftware crash\b|\binstallation error\b"),
+]
+
+
+def high_confidence_category(text: str) -> str | None:
+    """Return a category for unmistakable phrases, otherwise None."""
+    text = str(text).lower()
+    for category, pattern in HIGH_CONFIDENCE_RULES:
+        if re.search(pattern, text):
+            return category
+    return None
+
 
 def predict_subcategory(text: str, category: str) -> str:
     """Return the first matching sub-category, or Other when evidence is weak."""

@@ -11,6 +11,8 @@ English Hugging Face rows are combined from subject and body, normalized for whi
 
 The original real data is split 80/20 with a fixed random seed of 42 before any synthetic augmentation. Synthetic rows, when present, are added to training only.
 
+Because the original Kaggle source is heavily skewed toward Hardware, the processed real dataset caps Hardware at 2,500 rows using a fixed seed. Logistic Regression also uses `class_weight="balanced"`.
+
 ## Known limitations
 
 - Hardware is much larger than Email and VPN.
@@ -18,4 +20,5 @@ The original real data is split 80/20 with a fixed random seed of 42 before any 
 - Keyword labeling for weak categories requires manual review.
 - Synthetic tickets may improve coverage but can introduce repetitive phrasing.
 - Logistic Regression probabilities are useful confidence estimates but are not calibrated probabilities.
+- High-confidence phrase rules handle obvious Wi-Fi, phishing, VPN, email, software-crash, and password-reset cases before the statistical model. Very short text returns `Unknown`.
 - The held-out test set is derived from the automatically labelled data; a separate handwritten evaluation set is needed for final external validation.

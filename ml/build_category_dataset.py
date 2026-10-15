@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 SEED = 42
+MAX_HARDWARE_ROWS = 2500
 CATEGORIES = ["Network", "VPN", "Software", "Hardware", "Password Reset", "Email", "Security"]
 TAG_COLUMNS = [f"tag_{i}" for i in range(1, 9)]
 
@@ -75,6 +76,11 @@ def main() -> None:
         build_kaggle_labels(DATA_DIR / "all_tickets_processed_improved_v3.csv"),
     ], ignore_index=True)
     real = real[real["category"].isin(CATEGORIES)].drop_duplicates(subset=["text"]).reset_index(drop=True)
+    hardware = real[real["category"].eq("Hardware")]
+    non_hardware = real[~real["category"].eq("Hardware")]
+    if len(hardware) > MAX_HARDWARE_ROWS:
+        hardware = hardware.sample(MAX_HARDWARE_ROWS, random_state=SEED)
+    real = pd.concat([non_hardware, hardware], ignore_index=True).sample(frac=1, random_state=SEED).reset_index(drop=True)
     real.insert(0, "ticket_id", np.arange(1, len(real) + 1))
 
     train_real, test = train_test_split(real, test_size=0.20, random_state=SEED, stratify=real["category"])
@@ -95,6 +101,7 @@ def main() -> None:
     real.to_csv(DATA_DIR / "processed_tickets.csv", index=False)
     train.to_csv(DATA_DIR / "train.csv", index=False)
     test.to_csv(DATA_DIR / "test.csv", index=False)
+    print(f"hardware cap: {MAX_HARDWARE_ROWS}")
     print("processed:", real.shape)
     print("train:", train.shape)
     print("test:", test.shape)

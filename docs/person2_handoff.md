@@ -26,6 +26,8 @@ result = classify_category(subject + " " + description)
 
 The result contains `category`, `sub_category`, and `category_confidence`. Empty text returns `Unknown` with confidence `0.0`.
 
+Texts with fewer than two words also return `Unknown`. High-confidence phrases are routed directly for obvious security, VPN, password-reset, email, network, and software cases; other tickets use the balanced TF-IDF model.
+
 ## Data boundary
 
 The test set is created before synthetic augmentation. Synthetic rows are present only in `train.csv`; `test.csv` contains only the held-out real rows.
