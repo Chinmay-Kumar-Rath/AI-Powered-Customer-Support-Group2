@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+*.pyc
+# Environment variables and secrets
+.env
+.env.*
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Data and model files
+data/*
+!data/.gitkeep
+
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
