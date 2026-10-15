@@ -1,0 +1,17 @@
+# Starts PostgreSQL for SupportPilot. Run:  docker compose up -d
+# The credentials below match backend/app/config.py - no .env file needed.
+services:
+  db:
+    image: postgres:16
+    container_name: supportpilot-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: supportpilot
+      POSTGRES_PASSWORD: supportpilot
+      POSTGRES_DB: supportpilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
