@@ -1,0 +1,13 @@
+venv/
+**/__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Local source datasets are large inputs and are not committed.
+data/aa_dataset-tickets-multi-lang-5-2-50-version.csv
+data/all_tickets_processed_improved_v3.csv
+
+# Derived training tables can be regenerated with ml/build_category_dataset.py.
+data/processed_tickets.csv
+data/train.csv
+data/test.csv

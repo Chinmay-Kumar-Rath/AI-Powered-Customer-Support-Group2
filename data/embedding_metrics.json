@@ -1,0 +1,7 @@
+{
+  "model": "sentence-transformers/all-MiniLM-L6-v2 + LogisticRegression",
+  "accuracy": 0.9541759053954176,
+  "macro_f1": 0.8457039163441353,
+  "train_rows": 16873,
+  "test_rows": 4059
+}
