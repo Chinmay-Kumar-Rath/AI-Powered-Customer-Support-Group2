@@ -13,10 +13,6 @@ env/
 # Jupyter Notebook
 .ipynb_checkpoints/
 
-# Data and model files
-data/*
-!data/.gitkeep
-
 # IDE
 .vscode/
 
