@@ -11,6 +11,8 @@ from .subcategory_rules import high_confidence_category, predict_subcategory
 
 
 DEFAULT_MODEL_PATH = Path(__file__).resolve().parent / "models" / "category_model.joblib"
+MIN_WORDS = 3
+MIN_CONFIDENCE = 0.55
 
 
 def load_artifact(model_path: str | Path = DEFAULT_MODEL_PATH) -> dict[str, Any]:
@@ -21,7 +23,7 @@ def load_artifact(model_path: str | Path = DEFAULT_MODEL_PATH) -> dict[str, Any]
 def classify_category(text: str, model_path: str | Path = DEFAULT_MODEL_PATH) -> dict[str, Any]:
     """Classify one ticket and return the agreed integration contract."""
     text = str(text).strip()
-    if not text or len(text.split()) < 2:
+    if not text or len(re.findall(r"\b\w+\b", text)) < MIN_WORDS:
         return {
             "category": "Unknown",
             "sub_category": "Other",
@@ -43,10 +45,17 @@ def classify_category(text: str, model_path: str | Path = DEFAULT_MODEL_PATH) ->
     probabilities = model.predict_proba(features)[0]
     index = int(np.argmax(probabilities))
     category = str(model.classes_[index])
+    confidence = float(probabilities[index])
+    if confidence < MIN_CONFIDENCE:
+        return {
+            "category": "Unknown",
+            "sub_category": "Other",
+            "category_confidence": round(confidence, 4),
+        }
     return {
         "category": category,
         "sub_category": predict_subcategory(text, category),
-        "category_confidence": round(float(probabilities[index]), 4),
+        "category_confidence": round(confidence, 4),
     }
 
 
@@ -114,14 +123,6 @@ def classify(subject: str | None, description: str, department: str | None = Non
     """Backend integration contract used by Person 3 and the API."""
     text = " ".join(part for part in (subject or "", description or "") if part).strip()
     result = classify_category(text)
-
-    # The API accepts only the configured categories.  A very short or
-    # greeting-like ticket therefore uses the model's neutral fallback rather
-    # than returning the internal ``Unknown`` value.
-    if result["category"] == "Unknown":
-        result["category"] = "Software"
-        result["sub_category"] = "Other"
-        result["category_confidence"] = 0.0
 
     severity, severity_confidence = classify_severity(text)
     result.update(
