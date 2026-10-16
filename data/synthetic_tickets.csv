@@ -159,6 +159,12 @@ The secure tunnel disappears when the laptop wakes from sleep for the customer s
 VPN login is rejected after a recent client update for the customer service team.,VPN,synthetic,reviewed_template
 The VPN client keeps retrying without displaying a useful error for the customer service team.,VPN,synthetic,reviewed_template
 Remote staff cannot reach internal applications through the VPN for the customer service team.,VPN,synthetic,reviewed_template
+VPN timeout,VPN,synthetic,reviewed_short_template
+VPN login failed,VPN,synthetic,reviewed_short_template
+VPN keeps disconnecting,VPN,synthetic,reviewed_short_template
+Remote VPN unavailable,VPN,synthetic,reviewed_short_template
+VPN client error,VPN,synthetic,reviewed_short_template
+VPN will not connect,VPN,synthetic,reviewed_short_template
 Outlook cannot send messages for the finance team.,Email,synthetic,reviewed_template
 Incoming email is delayed by more than an hour for the finance team.,Email,synthetic,reviewed_template
 The mailbox is full and new messages are being rejected for the finance team.,Email,synthetic,reviewed_template
@@ -319,6 +325,12 @@ The email search returns no recent messages for the customer service team.,Email
 A distribution-list message is not reaching the customer service team.,Email,synthetic,reviewed_template
 The mailbox quota warning appears on every login for the customer service team.,Email,synthetic,reviewed_template
 Calendar invitations are not synchronizing with email for the customer service team.,Email,synthetic,reviewed_template
+Outlook will not send,Email,synthetic,reviewed_short_template
+Mailbox is full,Email,synthetic,reviewed_short_template
+Email not syncing,Email,synthetic,reviewed_short_template
+Cannot receive email,Email,synthetic,reviewed_short_template
+Outlook login error,Email,synthetic,reviewed_short_template
+Email stuck in outbox,Email,synthetic,reviewed_short_template
 A user forgot the account password and needs a reset for the finance team.,Password Reset,synthetic,reviewed_template
 The account is locked after too many login attempts for the finance team.,Password Reset,synthetic,reviewed_template
 The password has expired and the reset page rejects the new value for the finance team.,Password Reset,synthetic,reviewed_template
@@ -479,6 +491,12 @@ The password policy prevents the user from completing the reset for the customer
 The login screen does not accept the newly changed password for the customer service team.,Password Reset,synthetic,reviewed_template
 The recovery question is unavailable during account unlock for the customer service team.,Password Reset,synthetic,reviewed_template
 An expired credential is blocking access to the support portal for the customer service team.,Password Reset,synthetic,reviewed_template
+Forgot password,Password Reset,synthetic,reviewed_short_template
+Account locked,Password Reset,synthetic,reviewed_short_template
+Password expired,Password Reset,synthetic,reviewed_short_template
+Reset password needed,Password Reset,synthetic,reviewed_short_template
+Credentials rejected,Password Reset,synthetic,reviewed_short_template
+Cannot unlock account,Password Reset,synthetic,reviewed_short_template
 The desktop application crashes immediately after launch for the finance team.,Software,synthetic,reviewed_template
 A required application update fails with an installation error for the finance team.,Software,synthetic,reviewed_template
 The reporting tool freezes when opening a large file for the finance team.,Software,synthetic,reviewed_template
@@ -639,3 +657,9 @@ The application crashes only when the customer service team prints a report.,Sof
 A version conflict prevents the plugin from loading for the customer service team.,Software,synthetic,reviewed_template
 The software cannot connect to its local configuration store for the customer service team.,Software,synthetic,reviewed_template
 A user sees a repeatable error when the customer service team opens the settings page.,Software,synthetic,reviewed_template
+Excel crashes,Software,synthetic,reviewed_short_template
+App will not install,Software,synthetic,reviewed_short_template
+Software update failed,Software,synthetic,reviewed_short_template
+Application freezes,Software,synthetic,reviewed_short_template
+Excel opens blank,Software,synthetic,reviewed_short_template
+Plugin will not load,Software,synthetic,reviewed_short_template

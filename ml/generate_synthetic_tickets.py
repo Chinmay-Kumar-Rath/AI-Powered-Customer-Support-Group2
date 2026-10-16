@@ -99,6 +99,13 @@ templates = {
     ],
 }
 
+short_templates = {
+    "VPN": ["VPN timeout", "VPN login failed", "VPN keeps disconnecting", "Remote VPN unavailable", "VPN client error", "VPN will not connect"],
+    "Email": ["Outlook will not send", "Mailbox is full", "Email not syncing", "Cannot receive email", "Outlook login error", "Email stuck in outbox"],
+    "Password Reset": ["Forgot password", "Account locked", "Password expired", "Reset password needed", "Credentials rejected", "Cannot unlock account"],
+    "Software": ["Excel crashes", "App will not install", "Software update failed", "Application freezes", "Excel opens blank", "Plugin will not load"],
+}
+
 
 rows = []
 for category, category_templates in templates.items():
@@ -110,6 +117,13 @@ for category, category_templates in templates.items():
                 "source": "synthetic",
                 "label_method": "reviewed_template",
             })
+    for short_text in short_templates.get(category, []):
+        rows.append({
+            "text": short_text,
+            "category": category,
+            "source": "synthetic",
+            "label_method": "reviewed_short_template",
+        })
 
 df = pd.DataFrame(rows).drop_duplicates(subset=["text"]).reset_index(drop=True)
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
