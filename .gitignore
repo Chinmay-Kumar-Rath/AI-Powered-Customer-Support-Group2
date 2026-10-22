@@ -19,3 +19,9 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+
+node_modules/
+frontend/node_modules/
+.env
+dist/
