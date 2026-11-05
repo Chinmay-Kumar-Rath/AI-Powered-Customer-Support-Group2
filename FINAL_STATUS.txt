@@ -1,0 +1,24 @@
+﻿SUPPORTPILOT — PERSON 3 FINAL STATUS
+
+Completed and verified:
+- Severity tests: 11 passed.
+- Backend tests: 8 passed.
+- git diff --check: no errors reported.
+- Classifier imports and runs successfully.
+- Priority mapping and department escalation are implemented.
+- Labeling guides are present.
+
+Known limitations:
+- Provisional severity model accuracy: 35% on a 20-ticket holdout.
+- The target of 85% severity accuracy has NOT been met.
+- Independent reviewer labels are not verified.
+- Live API startup is blocked because PostgreSQL is unavailable.
+- Sample outputs show category misclassification for a payroll outage.
+- More validation is needed before production use.
+
+Provisional artifacts:
+- ml/severity_model_provisional.joblib
+- data/severity_model_provisional_evaluation.json
+- data/severity_assisted_provisional_labels.csv
+
+Do not report the severity model target or live API as fully complete.
