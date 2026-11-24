@@ -1,45 +1,35 @@
-# SupportPilot React Frontend
+# SupportPilot – Role D Final Frontend
 
-A React + Vite frontend for the current SupportPilot FastAPI backend. It implements the backend features that are present in the supplied project: ticket intake, automatic category/severity/priority classification, ticket listing and filtering, lifecycle status updates, activity history, CSV bulk upload, and stats/analytics.
+This React + Vite frontend combines the supplied Milestone 1/2/3 backend capabilities into a single role-aware application.
 
-## Requirements
-- Node.js 18+ (Node 20+ recommended)
-- The SupportPilot FastAPI backend and PostgreSQL running
-
-## Run the backend first
-From the existing project root:
+## Run
 
 ```bash
-docker compose up -d
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-The API should be available at `http://localhost:8000`; docs are at `http://localhost:8000/docs`.
-
-## Run the frontend
-In this folder (`frontend`):
-
-```bash
+cd frontend
 npm install
-cp .env.example .env
+copy .env.example .env   # Windows
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal (usually `http://localhost:5173`). If the API uses a different URL, update `VITE_API_URL` in `.env` and restart Vite.
+The backend should be running at `http://localhost:8000` (or set `VITE_API_URL`).
 
-## API endpoints used
-- `GET /health` (backend connection can also be checked in the API docs)
-- `POST /tickets`
-- `GET /tickets`
-- `GET /tickets/{ticket_id}`
-- `GET /tickets/{ticket_id}/history`
-- `PATCH /tickets/{ticket_id}/status`
-- `POST /tickets/bulk`
-- `GET /stats`
+## Frontend coverage
 
-## Current scope / honest limitations
-The supplied backend is currently Milestone 1: intake, ML classification, ticket lifecycle and summary statistics. The UI therefore displays classification output returned by the backend; it does not fabricate generated resolutions or knowledge article references. Knowledge-base/RAG, LLM resolution generation, LangGraph multi-agent orchestration, Jira and email integrations are not exposed by the supplied backend API yet. The sidebar labels for not-yet-implemented modules show a notice rather than pretending those features work.
+- One `apiFetch` wrapper for every request; bearer Authorization is added in one place and 401 clears the session and returns the user to login.
+- React Router + AuthContext + protected role routes.
+- Employee login, registration, logout and dashboard.
+- My tickets with status/category/priority filters and search.
+- Create ticket and backend classification result.
+- Ticket detail: category, sub-category, severity, priority, both confidence values, processing time, status badge, four-step RAG trace, retrieved articles/relevance, generated answer, numbered steps, sources, confidence badge, human-review banner, Regenerate and Copy Reply.
+- Status history from `/tickets/{id}/history`.
+- “Did this fix it?” with Yes/No, 1–5 rating and comment. The form is shown when the backend allows feedback (`Awaiting User` or `Resolved`).
+- Escalation status, engineer, team, due time and Jira field. Jira is shown as unavailable because the supplied backend `EscalationOut` has no Jira reference field.
+- Knowledge Base search/filter/viewer and RAG metrics.
+- Staff/admin stats and ticket operations, including CSV import.
+- Bell notification integration calls `GET /notifications`. The supplied backend currently returns 404 for that route, so the UI falls back to recent ticket activity without changing the backend.
+- Loading, empty, error, toast and responsive/mobile states.
+- `src/mocks.js` and `USE_MOCKS=false` document the Milestone 2 mock-first switch; Milestone 3 uses live backend data.
 
-CSV upload requires `description` and `email`; `subject`, `department`, and `name` are optional. The current backend permits these status transitions: Open → Classified → In Progress → Resolved → Closed.
+## Testing/report assets
+
+See the repository-level `testing/` directory for the 100-ticket held-out test set, API evaluation script, fresh-50 runner and failure handoff. See `docs/person4_report.md` and `docs/demo_script_2_3_minutes.md` for the report/demo structure.

@@ -9,18 +9,9 @@ import EmployeeTickets from './pages/EmployeeTickets';
 import CreateTicket from './pages/CreateTicket';
 import TicketDetail from './pages/TicketDetail';
 import KnowledgeBase from './pages/KnowledgeBase';
-import AdminDashboard from './pages/admin/AdminDashboardContainer';
+import AdminDashboard from './pages/AdminDashboard';
 import AdminTickets from './pages/AdminTickets';
 import AdminTicketDetail from './pages/AdminTicketDetail';
 import RagMetrics from './pages/RagMetrics';
-import Escalations from './pages/Escalations';
-import Analytics from './pages/Analytics';
-import UsersPage from './pages/Users';
-import Integrations from './pages/Integrations';
 function Home(){const{user,loading}=useAuth();if(loading)return <div className="full-screen-center"><div className="loader-ring"/>Loading SupportPilot…</div>;return <Navigate to={user?(user.role==='employee'?'/employee':'/admin'):'/login'} replace/>}
-export default function App(){return <AuthProvider><BrowserRouter><Routes><Route path="/" element={<Home/>}/><Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/><Route element={<ProtectedRoute roles={['employee']}/>}><Route element={<AppShell/>}><Route path="/employee" element={<EmployeeDashboard/>}/><Route path="/employee/tickets" element={<EmployeeTickets/>}/><Route path="/employee/tickets/:id" element={<TicketDetail/>}/><Route path="/employee/create-ticket" element={<CreateTicket/>}/><Route path="/employee/kb" element={<KnowledgeBase/>}/></Route></Route><Route element={<ProtectedRoute roles={['admin','engineer']}/>}><Route element={<AppShell/>}><Route path="/admin" element={<AdminDashboard/>}/><Route path="/admin/tickets" element={<AdminTickets/>}/><Route path="/admin/tickets/:id" element={<AdminTicketDetail/>}/><Route path="/admin/kb" element={<KnowledgeBase/>}/><Route path="/admin/rag" element={<RagMetrics/>}/><Route path="/admin/escalations" element={<Escalations/>}/><Route path="/admin/analytics" element={<Analytics/>}/><Route path="/admin/users" element={<UsersPage/>}/><Route path="/admin/integrations" element={<Integrations/>}/></Route></Route><Route path="*" element={<Navigate to="/" replace/>}/></Routes></BrowserRouter></AuthProvider>}
-
-
-
-
-
+export default function App(){return <AuthProvider><BrowserRouter><Routes><Route path="/" element={<Home/>}/><Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/><Route element={<ProtectedRoute roles={['employee']}/>}><Route element={<AppShell/>}><Route path="/employee" element={<EmployeeDashboard/>}/><Route path="/employee/tickets" element={<EmployeeTickets/>}/><Route path="/employee/tickets/:id" element={<TicketDetail/>}/><Route path="/employee/create-ticket" element={<CreateTicket/>}/><Route path="/employee/kb" element={<KnowledgeBase/>}/></Route></Route><Route element={<ProtectedRoute roles={['admin','engineer']}/>}><Route element={<AppShell/>}><Route path="/admin" element={<AdminDashboard/>}/><Route path="/admin/tickets" element={<AdminTickets/>}/><Route path="/admin/tickets/:id" element={<AdminTicketDetail/>}/><Route path="/admin/kb" element={<KnowledgeBase/>}/><Route path="/admin/rag" element={<RagMetrics/>}/></Route></Route><Route path="*" element={<Navigate to="/" replace/>}/></Routes></BrowserRouter></AuthProvider>}

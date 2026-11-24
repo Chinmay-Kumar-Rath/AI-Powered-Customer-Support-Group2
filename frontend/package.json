@@ -13,7 +13,7 @@
     "lucide-react": "^0.468.0",
     "react": "latest",
     "react-dom": "latest",
-    "react-router-dom": "^7.18.6",
+    "react-router-dom": "^7.9.6",
     "vite": "latest"
   }
 }
