@@ -65,7 +65,12 @@ export default function Escalations() {
   const visible = items.filter((item) => {
     if (filter === "all") return true;
     if (filter === "unassigned") return item.assigned_to == null;
-    return String(item.status || "").toLowerCase() === filter;
+    const normalizedStatus = String(item.status || "")
+  .trim()
+  .toLowerCase()
+  .replace(/\s+/g, "_");
+
+return normalizedStatus === filter;
   });
 
   return (
@@ -75,7 +80,7 @@ export default function Escalations() {
           <h1 style={{ margin: 0, fontSize: "27px", fontWeight: 800 }}>Escalation Queue</h1>
           <p style={styles.muted}>Review, assign and resolve escalated support tickets.</p>
         </div>
-        <button style={styles.button} onClick={load} disabled={loading}>↻ Refresh queue</button>
+        <button style={styles.button} onClick={load} disabled={loading}>? Refresh queue</button>
       </div>
 
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
@@ -179,3 +184,5 @@ export default function Escalations() {
     </main>
   );
 }
+
+

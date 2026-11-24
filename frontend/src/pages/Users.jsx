@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+﻿import React, { useCallback, useEffect, useState } from "react";
 import { api, apiFetch } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { Users, Search, Plus, RefreshCw, Pencil, ShieldCheck, UserCheck, UserX, X } from "lucide-react";
@@ -9,7 +9,7 @@ const field = {width:"100%",padding:"11px 12px",border:"1px solid #e5e0ef",borde
 
 export default function UsersPage() {
   const { user } = useAuth();
-  if (user?.role !== "admin") return <div style={{padding:32,color:"#261b49"}}><h2>Admin access required</h2><p>Only administrators can manage user accounts.</p></div>;
+
   const [users,setUsers] = useState([]);
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState("");
@@ -21,13 +21,34 @@ export default function UsersPage() {
   const [form,setForm] = useState(initial);
   const [saving,setSaving] = useState(false);
 
-  const load = async () => {
-    setLoading(true); setError("");
-    try { setUsers(await api.users({limit:500})); }
-    catch(e) { setError(e.message || "Unable to load users."); }
-    finally { setLoading(false); }
-  };
-  useEffect(()=>{load();},[]);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setUsers(await api.users({ limit: 500 }));
+    } catch (e) {
+      setError(e.message || "Unable to load users.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user?.role === "admin") {
+      load();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.role, load]);
+
+  if (user?.role !== "admin") {
+    return (
+      <div style={{ padding: 32, color: "#261b49" }}>
+        <h2>Admin access required</h2>
+        <p>Only administrators can manage user accounts.</p>
+      </div>
+    );
+  }
 
   const filtered = users.filter(u => {
     const term = search.toLowerCase();
@@ -144,4 +165,6 @@ export default function UsersPage() {
     </div>}
   </main>;
 }
+
+
 
