@@ -11,11 +11,11 @@ from sqlalchemy import or_
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from . import access, auth, config, kb, migrate, rag_bridge, security, services, workflow
+from . import access, auth, config, hooks, kb, migrate, rag_bridge, security, services, workflow
 from .auth import admin_only, get_current_user, staff_only
 from .database import SessionLocal, engine, get_db
 from .models import (
-    ActivityLog, AgentRun, Escalation, Feedback, KnowledgeArticle, Ticket, User,
+    ActivityLog, AgentRun, EmailLog, Escalation, Feedback, JiraTicket, KnowledgeArticle, Ticket, User,
 )
 from .schemas import (
     AgentRunOut, ArticleCreated, ArticleIn, ArticleOut, ArticleSummary, AssignIn, EscalationOut, FeedbackIn,
@@ -569,3 +569,25 @@ def stats(user: User = Depends(staff_only), db: Session = Depends(get_db)):
 @app.get("/rag/stats", tags=["statistics"])
 def rag_stats(user: User = Depends(staff_only), db: Session = Depends(get_db)):
     return services.build_rag_stats(db)
+
+
+@app.get("/integrations/status", tags=["integrations"])
+def integrations_status(user: User = Depends(staff_only), db: Session = Depends(get_db)):
+    latest_jira = db.query(JiraTicket).order_by(JiraTicket.last_updated.desc()).first()
+    latest_email = db.query(EmailLog).order_by(EmailLog.sent_at.desc()).first()
+
+    return {
+        "modules": hooks.status(),
+        "jira": {
+            "records": db.query(JiraTicket).count(),
+            "last_sync": latest_jira.last_updated.isoformat() if latest_jira and latest_jira.last_updated else None,
+            "latest_issue": latest_jira.jira_issue_key if latest_jira else None,
+        },
+        "email": {
+            "total": db.query(EmailLog).count(),
+            "sent": db.query(EmailLog).filter(EmailLog.status == "sent").count(),
+            "failed": db.query(EmailLog).filter(EmailLog.status == "failed").count(),
+            "dry_run": db.query(EmailLog).filter(EmailLog.status == "dry_run").count(),
+            "last_activity": latest_email.sent_at.isoformat() if latest_email and latest_email.sent_at else None,
+        },
+    }
