@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { api } from "../api";
+import { api } from "../../api";
 import { RefreshCw, Mail, GitBranch, CheckCircle2, AlertCircle, Clock3 } from "lucide-react";
 
 export default function Integrations() {

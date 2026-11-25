@@ -5,23 +5,23 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppShell from './components/AppShell';
 
 import { Login, Register } from './pages/AuthPages';
-import EmployeeDashboard from './pages/EmployeeDashboard';
-import EmployeeTickets from './pages/EmployeeTickets';
-import CreateTicket from './pages/CreateTicket';
-import TicketDetail from './pages/TicketDetail';
-import KnowledgeBase from './pages/KnowledgeBase';
+import EmployeeDashboard from './pages/user/EmployeeDashboard';
+import EmployeeTickets from './pages/user/EmployeeTickets';
+import CreateTicket from './pages/user/CreateTicket';
+import TicketDetail from './pages/user/TicketDetail';
+import KnowledgeBase from './pages/user/KnowledgeBase';
 
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminDashboardContainer from './pages/admin/AdminDashboardContainer';
-import AdminTickets from './pages/AdminTickets';
-import AdminTicketDetail from './pages/AdminTicketDetail';
-import RagMetrics from './pages/RagMetrics';
+import AdminTickets from './pages/admin/AdminTickets';
+import AdminTicketDetail from './pages/admin/AdminTicketDetail';
+import RagMetrics from './pages/admin/RagMetrics';
 
-import Analytics from './pages/Analytics';
-import AnalyticsReport from './pages/AnalyticsReport';
-import Escalations from './pages/Escalations';
-import Users from './pages/Users';
-import Integrations from './pages/Integrations';
+import Analytics from './pages/admin/Analytics';
+import AnalyticsReport from './pages/admin/AnalyticsReport';
+import Escalations from './pages/admin/Escalations';
+import Users from './pages/admin/Users';
+import Integrations from './pages/admin/Integrations';
 
 function Home() {
   const { user, loading } = useAuth();

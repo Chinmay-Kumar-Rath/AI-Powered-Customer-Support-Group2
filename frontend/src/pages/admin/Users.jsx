@@ -1,6 +1,6 @@
 ﻿import React, { useCallback, useEffect, useState } from "react";
-import { api, apiFetch } from "../api";
-import { useAuth } from "../context/AuthContext";
+import { api, apiFetch } from "../../api";
+import { useAuth } from "../../context/AuthContext";
 import { Users, Search, Plus, RefreshCw, Pencil, ShieldCheck, UserCheck, UserX, X } from "lucide-react";
 
 const initial = { name:"", email:"", password:"", role:"employee", team:"", department:"", is_active:true };

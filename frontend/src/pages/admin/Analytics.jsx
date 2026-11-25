@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { api } from "../api";
-import { useAuth } from "../context/AuthContext";
+import { api } from "../../api";
+import { useAuth } from "../../context/AuthContext";
 import {
   BarChart3, Ticket, CheckCircle2, Clock3, Users,
   RefreshCw, Download, TrendingUp, AlertTriangle
