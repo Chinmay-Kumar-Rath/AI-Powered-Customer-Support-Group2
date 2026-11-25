@@ -1,17 +1,20 @@
 ---
 title: What should I do if email attachments cannot be opened?
 category: Email
-keywords: email, what, should, attachments, cannot, opened
+keywords: email, attachment, attachments, cannot open, download, Outlook, webmail, file
 ---
 Question: What should I do if email attachments cannot be opened?
 
-Suggested answer: Check internet access, mailbox quota, service status and the exact send/receive error. Verify recipient addresses and attachment limits. Test webmail if the desktop client is affected and confirm account/sync settings. Use the official multi-factor sign-in process. Never share passwords or verification codes. Escalate with diagnostic details, excluding confidential message content unless approved.
+Suggested answer: If an email attachment does not open, first confirm that the email and attachment are expected and trustworthy. Check your internet connection, download the attachment using your organization's approved email client, and verify that your device supports the file format. If the attachment still does not open, try the organization's approved webmail client. Record the exact error message and contact IT support if the problem continues.
 
 Steps:
-1. Follow the safe first-line checks described in the suggested answer.
-2. Record any exact error, status light, diagnostic code, or observed symptom.
-3. Stop and request authorized support if the issue persists or the check is unsafe.
+1. Confirm that the email sender and attachment are expected. Do not open unexpected or suspicious attachments.
+2. Check your internet connection and make sure the attachment has finished downloading.
+3. Verify that your device has an approved application capable of opening the attachment's file type.
+4. If permitted, download the attachment and try opening the downloaded copy using an approved application.
+5. Try accessing the same message through your organization's approved webmail client.
+6. If the attachment is password-protected, corrupted, or still cannot be opened, record the exact error message and contact IT support.
 
-Escalate if: the issue continues, affects multiple users, or involves physical danger, suspected compromise, or possible data loss.
+Escalate if: the attachment remains inaccessible, multiple employees experience the same issue, the file appears corrupted, or the email or attachment may be malicious.
 
-Safety note: These are general first-line checks. Do not open equipment, alter firmware, change corporate network or security settings, bypass MFA, disable endpoint protection, or modify production data without authorization.
+Safety note: Never open suspicious attachments, enable macros in unexpected files, bypass security controls, share passwords or verification codes, or upload confidential attachments to unapproved online services.

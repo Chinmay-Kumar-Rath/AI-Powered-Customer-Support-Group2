@@ -52,27 +52,44 @@ def save_agent_runs(db: Session, ticket: Ticket, agent_trace: list):
 
 
 # ------------------------------------------------------------------ the decision
+
 def decide(ticket: Ticket, result: dict) -> list:
     """Reasons to involve a human. An empty list means the AI answer can go to the user."""
     reasons = []
     resolution = result["resolution"]
-    if not ticket.category:
+
+    # Missing or uncertain classification must always go to a human.
+    if (
+        ticket.category in (None, "", "Unknown")
+        or ticket.severity in (None, "", "Unknown")
+    ):
         reasons.append("classification failed or returned Unknown")
+
     if resolution.get("needs_human_review"):
-        reasons.append("AI answer flagged for human review (low confidence or no matching article)")
+        reasons.append(
+            "AI answer flagged for human review (low confidence or no matching article)"
+        )
     elif resolution["confidence"] < config.AUTO_RESOLVE_MIN_CONFIDENCE:
-        reasons.append(f"AI confidence {resolution['confidence']:.2f} is below {config.AUTO_RESOLVE_MIN_CONFIDENCE:.2f}")
+        reasons.append(
+            f"AI confidence {resolution['confidence']:.2f} is below "
+            f"{config.AUTO_RESOLVE_MIN_CONFIDENCE:.2f}"
+        )
+
     if result["decision"] == "escalate":
         if result.get("reason"):
             reasons.append(result["reason"])
         elif not reasons:
             reasons.append("the agents recommended escalation")
+
     if ticket.category in config.ESCALATE_CATEGORIES:
         reasons.append(f"{ticket.category} tickets always go to a human team")
+
     if ticket.severity in config.ESCALATE_SEVERITIES:
         reasons.append(f"{ticket.severity} severity needs a human")
-    # keep the list tidy (no duplicates, same order)
+
+    # Keep the list tidy (no duplicates, same order).
     return list(dict.fromkeys(reasons))
+
 
 
 def run_resolution_flow(db: Session, ticket: Ticket):

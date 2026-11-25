@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { useAuth } from "../context/AuthContext";
 import {
   BarChart3, Ticket, CheckCircle2, Clock3, Users,
   RefreshCw, Download, TrendingUp, AlertTriangle
@@ -55,6 +56,7 @@ function Metric({label,value,detail,Icon,color}) {
 }
 
 export default function Analytics() {
+  const { user } = useAuth();
   const [stats,setStats] = useState(null);
   const [tickets,setTickets] = useState([]);
   const [users,setUsers] = useState([]);
@@ -66,7 +68,7 @@ export default function Analytics() {
     setLoading(true);
     setError("");
     const results = await Promise.allSettled([
-      api.stats(), api.tickets({limit:500}), api.users({limit:500}), api.ragStats()
+      api.stats(), api.tickets({limit:500}), user?.role === "admin" ? api.users({limit:500}) : Promise.resolve([]), api.ragStats()
     ]);
     if (results[0].status === "fulfilled") setStats(results[0].value);
     else setError(results[0].reason?.message || "Could not load statistics.");
@@ -76,7 +78,7 @@ export default function Analytics() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [user?.role]);
 
   const analytics = useMemo(() => {
     const normalized = tickets.map(t => ({
@@ -189,6 +191,7 @@ export default function Analytics() {
       </section>
     </div>
 
+    {user?.role === "admin" && (
     <section style={card}>
       <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:15}}>
         <Users size={19} color={colors.purple}/>
@@ -206,6 +209,7 @@ export default function Analytics() {
           </table>
         </div>}
     </section>
+    )}
 
     <p style={{fontSize:11,color:colors.muted,marginTop:15}}>
       Analytics are calculated from the statistics endpoint and up to 500 tickets visible to the signed-in staff member. Daily trends and engineer figures reflect those returned records, not a complete historical audit.
