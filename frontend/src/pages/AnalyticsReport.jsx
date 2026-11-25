@@ -182,6 +182,13 @@ export default function AnalyticsReport() {
         <div style={{ ...panel, marginTop: 16, color: C.muted, fontSize: 13 }}>
           <strong style={{ color: C.ink }}>Validation outcomes:</strong> {data.validation?.message || 'Validation outcome data is not currently available.'}
         </div>
+        {data.validation?.available && <div style={{ ...grid, marginTop: 14 }}>
+          <Metric label="Validation runs" value={data.validation.total_runs ?? 0} icon={BarChart3} color={C.blue} />
+          <Metric label="Passed" value={data.validation.passed ?? 0} icon={CheckCircle2} color={C.teal} />
+          <Metric label="Failed" value={data.validation.failed ?? 0} icon={AlertCircle} color={C.orange} />
+          <Metric label="Pass rate" value={data.validation.pass_rate == null ? '?' : `${data.validation.pass_rate}%`} icon={TrendingUp} color={C.teal} />
+          <Metric label="Avg. validation confidence" value={data.validation.average_confidence == null ? '?' : `${(data.validation.average_confidence * 100).toFixed(1)}%`} icon={Activity} color={C.blue} />
+        </div>}
       </>}
 
       {slug === 'satisfaction' && <>

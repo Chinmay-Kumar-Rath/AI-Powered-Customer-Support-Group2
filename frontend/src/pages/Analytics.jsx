@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   BarChart3, Ticket, CheckCircle2, Clock3, Users,
@@ -145,6 +146,28 @@ export default function Analytics() {
         </button>
       </div>
     </div>
+
+    <section style={{marginBottom:20}}>
+      <h2 style={{fontSize:18,color:colors.ink,margin:"0 0 13px"}}>Detailed Analytics Reports</h2>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:13}}>
+        {[
+          {title:"Escalation Analytics",description:"Explore escalation trends, teams and outcomes.",path:"/admin/analytics/escalations",Icon:AlertTriangle,color:colors.purple},
+          {title:"Agent Performance",description:"Review agent runs, execution time and confidence.",path:"/admin/analytics/agents",Icon:Users,color:colors.blue},
+          {title:"Customer Satisfaction",description:"Track feedback, ratings and satisfaction trends.",path:"/admin/analytics/satisfaction",Icon:CheckCircle2,color:colors.teal},
+          {title:"Recurring Issues",description:"Identify repeated issues and emerging patterns.",path:"/admin/analytics/recurring-issues",Icon:TrendingUp,color:colors.orange}
+        ].map(item => (
+          <Link key={item.path} to={item.path} style={{...card,textDecoration:"none",display:"flex",alignItems:"flex-start",gap:13,transition:"transform .2s",color:colors.ink}}>
+            <span style={{width:42,height:42,flexShrink:0,borderRadius:12,background:`${item.color}18`,color:item.color,display:"grid",placeItems:"center"}}>
+              <item.Icon size={21}/>
+            </span>
+            <span>
+              <strong style={{display:"block",fontSize:14,marginBottom:5}}>{item.title}</strong>
+              <span style={{fontSize:12,color:colors.muted,lineHeight:1.5}}>{item.description}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
 
     {error && <div style={{...card,marginBottom:18,color:colors.red}}>Statistics error: {error}</div>}
     {loading && <div style={{...card,marginBottom:18,color:colors.muted}}>Loading analytics data…</div>}

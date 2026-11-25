@@ -640,14 +640,44 @@ def agent_analytics(user: User = Depends(staff_only), db: Session = Depends(get_
         })
 
     statuses = Counter((row.status or "Unknown") for row in rows)
+
+    validation_runs = [
+        row for row in rows
+        if (row.agent_name or "").strip().lower() == "validation"
+    ]
+    validation_outcomes = [
+        row.output for row in validation_runs
+        if isinstance(row.output, dict) and isinstance(row.output.get("passed"), bool)
+    ]
+    validation_passed = sum(1 for outcome in validation_outcomes if outcome["passed"])
+    validation_failed = len(validation_outcomes) - validation_passed
+    validation_confidences = [
+        outcome["confidence"] for outcome in validation_outcomes
+        if isinstance(outcome.get("confidence"), (int, float))
+        and not isinstance(outcome.get("confidence"), bool)
+    ]
+
+    validation = {
+        "available": bool(validation_outcomes),
+        "total_runs": len(validation_outcomes),
+        "passed": validation_passed,
+        "failed": validation_failed,
+        "pass_rate": round(validation_passed * 100 / len(validation_outcomes), 1)
+            if validation_outcomes else None,
+        "average_confidence": round(mean(validation_confidences), 3)
+            if validation_confidences else None,
+        "message": (
+            "Validation outcomes calculated from persisted agent records."
+            if validation_outcomes
+            else "No persisted validation outcomes are available yet."
+        ),
+    }
+
     return {
         "total_runs": len(rows),
         "by_status": dict(statuses),
         "agents": sorted(agents, key=lambda item: item["total_runs"], reverse=True),
-        "validation": {
-            "available": False,
-            "message": "Validation outcomes are not persisted in agent_runs.",
-        },
+        "validation": validation,
     }
 
 

@@ -76,11 +76,40 @@ def _normalize(raw) -> dict:
     if decision not in ("auto_resolve", "escalate"):
         decision = "escalate" if resolution["needs_human_review"] else "auto_resolve"
     trace = [t for t in (raw.get("agent_trace") or []) if isinstance(t, dict)]
+    validation = raw.get("validation") or {}
+
+    if isinstance(validation, dict) and validation:
+        validation_run = next(
+            (item for item in trace
+             if str(item.get("agent") or "").strip().lower() == "validation"),
+            None,
+        )
+        passed = validation.get("passed")
+        validation_status = (
+            "ok" if passed is True
+            else "failed" if passed is False
+            else "unknown"
+        )
+
+        if validation_run is None:
+            trace.append({
+                "agent": "Validation",
+                "status": validation_status,
+                "confidence": validation.get("confidence"),
+                "summary": str(validation.get("notes") or ""),
+                "output": validation,
+            })
+        else:
+            validation_run.setdefault("output", validation)
+            validation_run.setdefault("confidence", validation.get("confidence"))
+            validation_run.setdefault("summary", str(validation.get("notes") or ""))
+            validation_run.setdefault("status", validation_status)
+
     return rag_bridge._clean({
         "agent_trace": trace,
         "diagnosis": raw.get("diagnosis") or {},
         "resolution": resolution,
-        "validation": raw.get("validation") or {},
+        "validation": validation,
         "decision": decision,
         "escalate_to": raw.get("escalate_to"),
         "reason": str(raw.get("reason") or ""),
