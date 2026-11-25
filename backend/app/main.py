@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,7 @@ from . import access, auth, config, hooks, kb, migrate, rag_bridge, security, se
 from .auth import admin_only, get_current_user, staff_only
 from .database import SessionLocal, engine, get_db
 from .models import (
-    ActivityLog, AgentRun, EmailLog, Escalation, Feedback, JiraTicket, KnowledgeArticle, Ticket, User,
+    ActivityLog, AgentRun, EmailLog, Escalation, Feedback, JiraTicket, KnowledgeArticle, RecurringIssue, Ticket, User,
 )
 from .schemas import (
     AgentRunOut, ArticleCreated, ArticleIn, ArticleOut, ArticleSummary, AssignIn, EscalationOut, FeedbackIn,
@@ -590,4 +590,148 @@ def integrations_status(user: User = Depends(staff_only), db: Session = Depends(
             "dry_run": db.query(EmailLog).filter(EmailLog.status == "dry_run").count(),
             "last_activity": latest_email.sent_at.isoformat() if latest_email and latest_email.sent_at else None,
         },
+    }
+
+from collections import Counter
+from statistics import mean
+
+
+@app.get("/analytics/escalations", tags=["statistics"])
+def escalation_analytics(user: User = Depends(staff_only), db: Session = Depends(get_db)):
+    rows = db.query(Escalation).order_by(Escalation.created_at).all()
+    statuses = Counter((row.status or "Unknown") for row in rows)
+    teams = Counter((row.assigned_team or "Unassigned") for row in rows)
+    daily = Counter(row.created_at.date().isoformat() for row in rows if row.created_at)
+    resolved = [row for row in rows if row.resolved_at and row.created_at]
+    durations = [
+        (row.resolved_at - row.created_at).total_seconds() / 3600
+        for row in resolved
+    ]
+    return {
+        "total": len(rows),
+        "by_status": dict(statuses),
+        "by_team": dict(teams),
+        "daily_trend": [{"date": day, "count": count} for day, count in sorted(daily.items())],
+        "resolved": len(resolved),
+        "average_resolution_hours": round(mean(durations), 2) if durations else None,
+    }
+
+
+@app.get("/analytics/agents", tags=["statistics"])
+def agent_analytics(user: User = Depends(staff_only), db: Session = Depends(get_db)):
+    rows = db.query(AgentRun).order_by(AgentRun.created_at).all()
+    grouped = {}
+    for row in rows:
+        name = row.agent_name or "Unknown"
+        grouped.setdefault(name, []).append(row)
+
+    agents = []
+    for name, runs in grouped.items():
+        successful = sum(1 for run in runs if (run.status or "").lower() in {"ok", "success", "completed"})
+        durations = [run.duration_ms for run in runs if run.duration_ms is not None]
+        confidences = [run.confidence for run in runs if run.confidence is not None]
+        agents.append({
+            "agent_name": name,
+            "total_runs": len(runs),
+            "successful_runs": successful,
+            "success_rate": round(successful * 100 / len(runs), 1) if runs else None,
+            "average_duration_ms": round(mean(durations), 2) if durations else None,
+            "average_confidence": round(mean(confidences), 3) if confidences else None,
+        })
+
+    statuses = Counter((row.status or "Unknown") for row in rows)
+    return {
+        "total_runs": len(rows),
+        "by_status": dict(statuses),
+        "agents": sorted(agents, key=lambda item: item["total_runs"], reverse=True),
+        "validation": {
+            "available": False,
+            "message": "Validation outcomes are not persisted in agent_runs.",
+        },
+    }
+
+
+@app.get("/analytics/satisfaction", tags=["statistics"])
+def satisfaction_analytics(user: User = Depends(staff_only), db: Session = Depends(get_db)):
+    rows = db.query(Feedback).order_by(Feedback.created_at).all()
+    rated = [row.rating for row in rows if row.rating is not None]
+    distribution = Counter(str(rating) for rating in rated)
+    daily = {}
+    for row in rows:
+        if row.created_at:
+            day = row.created_at.date().isoformat()
+            daily.setdefault(day, []).append(row)
+
+    happy = sum(1 for rating in rated if rating >= 4)
+    resolved = sum(1 for row in rows if row.is_resolved)
+    return {
+        "total_feedback": len(rows),
+        "rated_feedback": len(rated),
+        "average_rating": round(mean(rated), 2) if rated else None,
+        "satisfaction_pct": round(happy * 100 / len(rated), 1) if rated else None,
+        "resolved_feedback": resolved,
+        "unresolved_feedback": len(rows) - resolved,
+        "rating_distribution": [
+            {"rating": rating, "count": distribution.get(str(rating), 0)}
+            for rating in range(1, 6)
+        ],
+        "daily_trend": [
+            {
+                "date": day,
+                "count": len(items),
+                "average_rating": round(mean([item.rating for item in items if item.rating is not None]), 2)
+                if any(item.rating is not None for item in items) else None,
+            }
+            for day, items in sorted(daily.items())
+        ],
+    }
+
+
+@app.get("/analytics/recurring-issues", tags=["statistics"])
+def recurring_issue_analytics(user: User = Depends(staff_only), db: Session = Depends(get_db)):
+    rows = (
+        db.query(RecurringIssue)
+        .order_by(RecurringIssue.occurrence_count.desc(), RecurringIssue.last_seen.desc())
+        .all()
+    )
+    return {
+        "total": len(rows),
+        "total_occurrences": sum(row.occurrence_count or 0 for row in rows),
+        "by_category": dict(Counter((row.category or "Uncategorized") for row in rows)),
+        "by_status": dict(Counter((row.status or "Unknown") for row in rows)),
+        "issues": [
+            {
+                "id": row.recurring_issue_id,
+                "signature": row.signature,
+                "category": row.category,
+                "assigned_team": row.assigned_team,
+                "occurrence_count": row.occurrence_count or 0,
+                "first_seen": row.first_seen.isoformat() if row.first_seen else None,
+                "last_seen": row.last_seen.isoformat() if row.last_seen else None,
+                "sample_ticket_ids": row.sample_ticket_ids or [],
+                "status": row.status,
+                "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+            }
+            for row in rows
+        ],
+    }
+
+
+@app.get("/tickets/{ticket_id}/jira", tags=["tickets"])
+def ticket_jira(ticket_id: int, user: User = Depends(staff_only), db: Session = Depends(get_db)):
+    _visible_ticket(db, user, ticket_id)
+    row = (
+        db.query(JiraTicket)
+        .filter(JiraTicket.ticket_id == ticket_id)
+        .order_by(JiraTicket.last_updated.desc(), JiraTicket.jira_id.desc())
+        .first()
+    )
+    if not row:
+        return {"linked": False}
+    return {
+        "linked": True,
+        "jira_issue_key": row.jira_issue_key,
+        "jira_status": row.jira_status,
+        "jira_url": row.jira_url,
+        "last_updated": row.last_updated.isoformat() if row.last_updated else None,
     }

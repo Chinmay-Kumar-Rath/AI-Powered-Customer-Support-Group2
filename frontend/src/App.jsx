@@ -18,6 +18,7 @@ import AdminTicketDetail from './pages/AdminTicketDetail';
 import RagMetrics from './pages/RagMetrics';
 
 import Analytics from './pages/Analytics';
+import AnalyticsReport from './pages/AnalyticsReport';
 import Escalations from './pages/Escalations';
 import Users from './pages/Users';
 import Integrations from './pages/Integrations';
@@ -75,6 +76,10 @@ export default function App() {
               <Route path="/admin/tickets" element={<AdminTickets />} />
               <Route path="/admin/tickets/:id" element={<AdminTicketDetail />} />
               <Route path="/admin/analytics" element={<Analytics />} />
+              <Route path="/admin/analytics/escalations" element={<AnalyticsReport />} />
+              <Route path="/admin/analytics/agents" element={<AnalyticsReport />} />
+              <Route path="/admin/analytics/satisfaction" element={<AnalyticsReport />} />
+              <Route path="/admin/analytics/recurring-issues" element={<AnalyticsReport />} />
               <Route path="/admin/escalations" element={<Escalations />} />
               <Route path="/admin/kb" element={<KnowledgeBase />} />
               <Route path="/admin/rag" element={<RagMetrics />} />
