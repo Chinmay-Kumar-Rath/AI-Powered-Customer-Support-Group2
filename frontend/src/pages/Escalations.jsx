@@ -1,5 +1,6 @@
-﻿import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { escalationApi, api } from "../api";
+import { useAuth } from "../context/AuthContext";
 
 const styles = {
   page: { padding: "28px", color: "var(--text-primary, #172554)" },
@@ -19,6 +20,7 @@ function statusColor(status) {
 }
 
 export default function Escalations() {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [engineers, setEngineers] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -33,7 +35,7 @@ export default function Escalations() {
     try {
       const [escalationData, userData] = await Promise.all([
         escalationApi.list({ limit: 500 }),
-        api.users({ limit: 500 }),
+        user?.role === "admin" ? api.users({ limit: 500 }) : Promise.resolve([]),
       ]);
       setItems(Array.isArray(escalationData) ? escalationData : []);
       const list = Array.isArray(userData) ? userData : [];
@@ -43,7 +45,7 @@ export default function Escalations() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.role]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -144,6 +146,7 @@ return normalizedStatus === filter;
                   Accept
                 </button>
 
+                {user?.role === "admin" && (
                 <button style={styles.action} disabled={busy === item.escalation_id}
                   onClick={() => {
                     const choice = window.prompt(
@@ -157,6 +160,7 @@ return normalizedStatus === filter;
                   }}>
                   Assign engineer
                 </button>
+                )}
 
                 <button style={styles.action} disabled={busy === item.escalation_id}
                   onClick={() => {

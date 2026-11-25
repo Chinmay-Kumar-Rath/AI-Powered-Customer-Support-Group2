@@ -1,3 +1,4 @@
+
 """The real work: create a ticket, classify it, log it, change its status."""
 import json
 import time
@@ -57,9 +58,12 @@ def create_and_classify(db: Session, data: TicketIn) -> Ticket:
         missing = [k for k in REQUIRED_KEYS if k not in result]
         if missing:
             raise ValueError(f"classifier result is missing keys: {missing}")
-        if result["category"] not in CATEGORIES:
+
+        # Unknown is an intentional classifier result when there is insufficient evidence.
+        # It must be preserved so the workflow can send the ticket for human review.
+        if result["category"] not in CATEGORIES and result["category"] != "Unknown":
             raise ValueError(f"unknown category '{result['category']}'")
-        if result["severity"] not in SEVERITIES:
+        if result["severity"] not in SEVERITIES and result["severity"] != "Unknown":
             raise ValueError(f"unknown severity '{result['severity']}'")
         if result["priority"] not in PRIORITIES:
             raise ValueError(f"unknown priority '{result['priority']}'")
@@ -72,11 +76,21 @@ def create_and_classify(db: Session, data: TicketIn) -> Ticket:
         ticket.priority = result["priority"]
         ticket.processing_ms = round(elapsed_ms, 2)
         ticket.status = "Classified"
+
+        classification_needs_review = (
+            result.get("needs_human_review", False)
+            or ticket.category == "Unknown"
+            or ticket.severity == "Unknown"
+        )
+
         add_log(
-            db, ticket.ticket_id,
-            f"Classified as {ticket.category} / {ticket.severity} / {ticket.priority}",
+            db,
+            ticket.ticket_id,
+            f"Classified as {ticket.category} / {ticket.severity} / {ticket.priority}"
+            + ("; human review required" if classification_needs_review else ""),
             "AI",
         )
+
     except Exception as exc:  # keep the ticket as Open and record why
         add_log(db, ticket.ticket_id, f"Classification failed: {exc}", "AI")
 
@@ -96,11 +110,22 @@ def create_and_classify(db: Session, data: TicketIn) -> Ticket:
     return ticket
 
 
-def save_response(db: Session, ticket: Ticket, resolution: dict, regenerated: bool = False,
-                  elapsed_ms=None) -> TicketResponse:
+def save_response(
+    db: Session,
+    ticket: Ticket,
+    resolution: dict,
+    regenerated: bool = False,
+    elapsed_ms=None,
+) -> TicketResponse:
     """Store one generated answer (and log it)."""
-    if not ticket.category:  # classification failed or returned "Unknown": a human must look at it
+
+    # Unknown or missing classification must always require human review.
+    if (
+        ticket.category in (None, "", "Unknown")
+        or ticket.severity in (None, "", "Unknown")
+    ):
         resolution["needs_human_review"] = True
+
     row = TicketResponse(
         ticket_id=ticket.ticket_id,
         generated_response=resolution["response_text"],
@@ -115,7 +140,8 @@ def save_response(db: Session, ticket: Ticket, resolution: dict, regenerated: bo
     )
     db.add(row)
     add_log(
-        db, ticket.ticket_id,
+        db,
+        ticket.ticket_id,
         f"Resolution {'regenerated' if regenerated else 'generated'} "
         f"({row.mode}, confidence {row.confidence_score:.2f})"
         + (", needs human review" if row.needs_human_review else ""),
@@ -126,7 +152,7 @@ def save_response(db: Session, ticket: Ticket, resolution: dict, regenerated: bo
 
 
 def generate_response(db: Session, ticket: Ticket, regenerated: bool = False) -> TicketResponse:
-    """Run the agents again for an existing ticket and save the new answer (the ticket status is not changed)."""
+    """Run the agents again for an existing ticket (the ticket status is not changed)."""
     from . import workflow
 
     started = time.perf_counter()
@@ -153,6 +179,7 @@ def change_status(db: Session, ticket: Ticket, new_status: str, performed_by: st
         ticket.resolved_at = now
     elif new_status == "Closed":
         ticket.closed_at = now
+
     # keep the escalation in step with the ticket
     esc = (
         db.query(Escalation).filter(Escalation.ticket_id == ticket.ticket_id)
@@ -165,6 +192,7 @@ def change_status(db: Session, ticket: Ticket, new_status: str, performed_by: st
         elif new_status == "Resolved" and esc.status != "Resolved":
             esc.status = "Resolved"
             esc.resolved_at = now
+
     add_log(db, ticket.ticket_id, f"Status changed: {old} -> {new_status}", performed_by)
     db.commit()
     db.refresh(ticket)
@@ -215,7 +243,11 @@ def build_rag_stats(db: Session) -> dict:
         .group_by(KnowledgeArticle.category)
         .all()
     )
-    by_mode = dict(db.query(TicketResponse.mode, func.count(TicketResponse.response_id)).group_by(TicketResponse.mode).all())
+    by_mode = dict(
+        db.query(TicketResponse.mode, func.count(TicketResponse.response_id))
+        .group_by(TicketResponse.mode)
+        .all()
+    )
     metrics = None
     try:
         if RETRIEVAL_METRICS_FILE.exists():
@@ -252,14 +284,22 @@ def _escalation_summary(db: Session) -> dict:
         "open": open_q.count(),
         "unassigned": open_q.filter(Escalation.assigned_to.is_(None)).count(),
         "sla_breached": breached,
-        "by_team": dict(db.query(Escalation.assigned_team, func.count(Escalation.escalation_id))
-                        .group_by(Escalation.assigned_team).all()),
+        "by_team": dict(
+            db.query(Escalation.assigned_team, func.count(Escalation.escalation_id))
+            .group_by(Escalation.assigned_team)
+            .all()
+        ),
     }
 
 
 def _feedback_summary(db: Session) -> dict:
     total = db.query(func.count(Feedback.feedback_id)).scalar() or 0
-    resolved = db.query(func.count(Feedback.feedback_id)).filter(Feedback.is_resolved.is_(True)).scalar() or 0
+    resolved = (
+        db.query(func.count(Feedback.feedback_id))
+        .filter(Feedback.is_resolved.is_(True))
+        .scalar()
+        or 0
+    )
     rated = db.query(func.count(Feedback.feedback_id)).filter(Feedback.rating.isnot(None)).scalar() or 0
     happy = db.query(func.count(Feedback.feedback_id)).filter(Feedback.rating >= 4).scalar() or 0
     avg = db.query(func.avg(Feedback.rating)).scalar()
