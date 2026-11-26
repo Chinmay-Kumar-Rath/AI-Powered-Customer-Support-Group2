@@ -18,8 +18,8 @@ const MOCK_TICKET = {ticket_id:1,ticket_code:'SP-1001',subject:'VPN keeps timing
 const MOCK_RESPONSE = {response_text:'Hello! Based on article VPN Connection Timeout, please try these steps:\n1. Check your internet connection.\n2. Restart the VPN client.\n3. Sign in again using your organization credentials.\n4. Contact IT if the timeout continues.\n\nSource: VPN Connection Timeout',steps:['Check your internet connection.','Restart the VPN client.','Sign in again using your organization credentials.','Contact IT if the timeout continues.'],sources:['VPN Connection Timeout'],articles:[MOCK_ARTICLES[0]],confidence:0.92,mode:'template',needs_human_review:false,trace:[{name:'Analyze ticket',time_ms:12},{name:'Retrieve articles',time_ms:86},{name:'Add context',time_ms:9},{name:'Generate response',time_ms:35}],response_ms:142};
 
 const CATEGORIES = ['Network', 'VPN', 'Software', 'Hardware', 'Password Reset', 'Email', 'Security'];
-const STATUSES = ['Open', 'Classified', 'In Progress', 'Resolved', 'Closed'];
-const NEXT_STATUS = { Open: 'Classified', Classified: 'In Progress', 'In Progress': 'Resolved', Resolved: 'Closed' };
+const STATUSES = ['Open', 'Classified', 'In Progress', 'Escalated', 'Resolved', 'Closed'];
+const NEXT_STATUS = { Open: 'Classified', Classified: 'In Progress', 'In Progress': 'Resolved', Escalated: 'In Progress', Resolved: 'Closed' };
 const initialForm = { name: '', email: '', department: 'IT', subject: '', description: '' };
 
 async function api(path, options = {}) {
@@ -53,8 +53,8 @@ function shortDate(value) {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
-function statusClass(value = '') { return `status-${value.toLowerCase().replaceAll(' ', '-')}`; }
-function severityClass(value = '') { return `severity-${value.toLowerCase()}`; }
+function statusClass(value) { return `status-${(value || 'unknown').toLowerCase().replaceAll(' ', '-')}`; }
+function severityClass(value) { return `severity-${(value || 'unknown').toLowerCase()}`; }
 function confidence(value) { return value == null ? '—' : `${Math.round(value * 100)}%`; }
 function Empty({ title, detail }) { return <div className="empty-state"><div className="empty-icon"><FileText size={22}/></div><b>{title}</b><span>{detail}</span></div>; }
 function Toast({ toast, onClose }) {

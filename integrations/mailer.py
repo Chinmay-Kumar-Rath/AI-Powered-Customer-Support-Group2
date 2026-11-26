@@ -22,11 +22,14 @@ class DryRunMailer:
 
     def __init__(self):
         self.outbox = []  # (to, subject, body) - inspected by the tests
+        self.html_outbox = []  # (to, subject, html_body)
         self._lock = threading.Lock()
 
-    def send(self, to: str, subject: str, body: str, sender: str) -> str:
+    def send(self, to: str, subject: str, body: str, sender: str, html_body: str = None) -> str:
         with self._lock:
             self.outbox.append((to, subject, body))
+            if html_body:
+                self.html_outbox.append((to, subject, html_body))
         print(f"[email dry-run] to={to} subject={subject!r}")
         return "dry_run"
 
@@ -37,7 +40,7 @@ class SmtpMailer:
     def __init__(self, settings: cfg.Settings):
         self.s = settings
 
-    def send(self, to: str, subject: str, body: str, sender: str) -> str:
+    def send(self, to: str, subject: str, body: str, sender: str, html_body: str = None) -> str:
         if not (self.s.smtp_user and self.s.smtp_password):
             raise MailError("SMTP_USER and SMTP_PASSWORD must be set when EMAIL_MODE=smtp")
         msg = EmailMessage()
@@ -45,6 +48,8 @@ class SmtpMailer:
         msg["To"] = to
         msg["Subject"] = subject
         msg.set_content(body)
+        if html_body:
+            msg.add_alternative(html_body, subtype="html")
         try:
             with smtplib.SMTP(self.s.smtp_host, self.s.smtp_port, timeout=20) as server:
                 server.starttls(context=ssl.create_default_context())

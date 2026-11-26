@@ -11,7 +11,8 @@ from sqlalchemy import or_
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from . import access, auth, config, kb, migrate, rag_bridge, role_c_api, security, services, workflow
+from . import access, auth, config, kb, migrate, rag_bridge, security, services, workflow
+from .routers import analytics, intake, integrations
 from .auth import admin_only, get_current_user, staff_only
 from .database import SessionLocal, engine, get_db
 from .models import (
@@ -42,7 +43,8 @@ async def lifespan(app: FastAPI):
                   "Change these passwords before deploying!")
     except Exception as exc:
         print(f"[auth] could not create default accounts: {exc}")
-    role_c_api.start_background_jobs()  # IMAP poller, only when IMAP_ENABLED=true
+    from integrations import imap_poller
+    imap_poller.start_poller()  # IMAP poller, only when IMAP_ENABLED=true
     if config.AUTH_DISABLED:
         print("[auth] WARNING: AUTH_DISABLED is on - every request acts as an admin. Development only!")
     # keep the Knowledge_Base table in sync with the article files (does not build the vector index)
@@ -64,7 +66,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-app.include_router(role_c_api.router)  # Role C: intake, integrations status, analytics, reports
+app.include_router(intake.router)
+app.include_router(integrations.router)
+app.include_router(analytics.router)
 
 
 # ------------------------------------------------------------------ helpers

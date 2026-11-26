@@ -50,13 +50,14 @@ class Settings:
     imap_password: str
     imap_folder: str
     imap_poll_seconds: int
-    # Webhook intake and public links (the "Did this fix it?" buttons point at PUBLIC_API_URL)
+    # Webhook intake and public links (the "Did this fix it?" buttons point at PUBLIC_API_URL / FRONTEND_URL)
     webhook_api_key: str
     public_api_url: str
+    frontend_url: str
 
 
 def load() -> Settings:
-    jira_url = _get("JIRA_BASE_URL").rstrip("/")
+    jira_url = (_get("JIRA_URL") or _get("JIRA_BASE_URL")).rstrip("/")
     jira_email = _get("JIRA_EMAIL")
     jira_token = _get("JIRA_API_TOKEN")
     jira_mode = _get("JIRA_MODE", "").lower()
@@ -69,6 +70,8 @@ def load() -> Settings:
     imap_mode = _get("IMAP_MODE", "").lower()
     if imap_mode not in ("live", "mock"):
         imap_mode = "live" if (imap_user and imap_password) else "mock"
+
+    imap_interval = _get("IMAP_POLL_INTERVAL") or _get("IMAP_POLL_SECONDS", "60")
 
     return Settings(
         jira_mode=jira_mode,
@@ -90,7 +93,8 @@ def load() -> Settings:
         imap_user=imap_user,
         imap_password=imap_password,
         imap_folder=_get("IMAP_FOLDER", "INBOX"),
-        imap_poll_seconds=int(_get("IMAP_POLL_SECONDS", "60") or 60),
+        imap_poll_seconds=int(imap_interval or 60),
         webhook_api_key=_get("WEBHOOK_API_KEY"),
         public_api_url=_get("PUBLIC_API_URL", "http://localhost:8000").rstrip("/"),
+        frontend_url=_get("FRONTEND_URL", "http://localhost:5173").rstrip("/"),
     )

@@ -11,7 +11,7 @@ class TicketIn(BaseModel):
     email: Optional[EmailStr] = None  # employees: taken from the login; staff: who the ticket is for
     department: str = "IT"
     name: Optional[str] = None
-    source: Literal["web", "email", "api"] = "web"
+    source: Literal["web", "email", "api", "webhook"] = "web"
 
     @field_validator("subject", "name", "department", mode="before")
     @classmethod

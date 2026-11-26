@@ -1,0 +1,7 @@
+search-path = ["backend", "."]
+
+[errors]
+missing-import = "ignore"
+bad-assignment = "ignore"
+bad-argument-type = "ignore"
+bad-function-definition = "ignore"

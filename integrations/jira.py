@@ -12,6 +12,7 @@ Two clients share one interface:
 import itertools
 import threading
 from datetime import datetime, timezone
+from typing import Any, Optional
 
 import httpx
 from sqlalchemy.orm import Session
@@ -29,6 +30,26 @@ STATUS_MAP = {
     "Resolved": "Done",
     "Closed": "Done",
 }
+JIRA_PRIORITIES = {"Highest", "High", "Medium", "Low", "Lowest"}
+PRIORITY_MAP = {
+    "P1": "Highest",
+    "P2": "High",
+    "P3": "Medium",
+    "P4": "Low",
+    "P5": "Lowest",
+    "CRITICAL": "Highest",
+    "HIGH": "High",
+    "MEDIUM": "Medium",
+    "LOW": "Low",
+}
+
+
+def _to_jira_priority(val: str) -> Optional[str]:
+    if not val:
+        return None
+    mapped = PRIORITY_MAP.get(val.upper(), val)
+    return mapped if mapped in JIRA_PRIORITIES else None
+
 _state = {"last_ok": None, "last_error": None, "last_error_at": None}
 _state_lock = threading.Lock()
 
@@ -74,18 +95,29 @@ class MockJiraClient:
             raise JiraError(f"Issue {key} does not exist")
         return self.issues[key]
 
-    def create_issue(self, summary: str, description: str, labels=None) -> dict:
-        key = f"{self.project_key}-{next(self._numbers)}"
-        self.issues[key] = {"summary": summary, "description": description, "status": "To Do",
-                            "labels": list(labels or []), "comments": []}
+    def create_issue(self, summary: str, description: str, priority: str = None, labels=None, key: str = None) -> dict:
+        if key is None:
+            key = f"{self.project_key}-{next(self._numbers)}"
+        self.issues[key] = {
+            "summary": summary,
+            "description": description,
+            "status": "To Do",
+            "priority": priority,
+            "labels": list(labels or []),
+            "comments": [],
+        }
         return {"key": key, "url": f"{self.base_url}/browse/{key}"}
 
-    def update_issue(self, key: str, summary: str = None, description: str = None):
+    def update_issue(self, key: str, summary: str = None, description: str = None, priority: str = None, labels=None):
         issue = self._issue(key)
         if summary is not None:
             issue["summary"] = summary
         if description is not None:
             issue["description"] = description
+        if priority is not None:
+            issue["priority"] = priority
+        if labels is not None:
+            issue["labels"] = list(labels)
 
     def get_issue(self, key: str) -> dict:
         issue = self._issue(key)
@@ -129,20 +161,32 @@ class CloudJiraClient:
         return {"type": "doc", "version": 1, "content": [
             {"type": "paragraph", "content": [{"type": "text", "text": p}]} for p in paragraphs]}
 
-    def create_issue(self, summary: str, description: str, labels=None) -> dict:
-        body = {"fields": {
-            "project": {"key": self.project_key}, "summary": summary[:255],
-            "description": self._adf(description), "issuetype": {"name": self.issue_type},
-            "labels": [str(label).replace(" ", "-") for label in (labels or [])]}}
+    def create_issue(self, summary: str, description: str, priority: str = None, labels=None) -> dict:
+        fields = {
+            "project": {"key": self.project_key},
+            "summary": summary[:255],
+            "description": self._adf(description),
+            "issuetype": {"name": self.issue_type},
+            "labels": [str(label).replace(" ", "-") for label in (labels or [])],
+        }
+        p_val = _to_jira_priority(priority)
+        if p_val:
+            fields["priority"] = {"name": p_val}
+        body = {"fields": fields}
         key = self._call("POST", "/issue", json=body)["key"]
         return {"key": key, "url": f"{self.base_url}/browse/{key}"}
 
-    def update_issue(self, key: str, summary: str = None, description: str = None):
-        fields = {}
+    def update_issue(self, key: str, summary: str = None, description: str = None, priority: str = None, labels=None):
+        fields: dict[str, Any] = {}
         if summary is not None:
             fields["summary"] = summary[:255]
         if description is not None:
             fields["description"] = self._adf(description)
+        p_val = _to_jira_priority(priority)
+        if p_val:
+            fields["priority"] = {"name": p_val}
+        if labels is not None:
+            fields["labels"] = [str(l).replace(" ", "-") for l in labels]
         if fields:
             self._call("PUT", f"/issue/{key}", json={"fields": fields})
 
@@ -231,13 +275,16 @@ def sync_ticket(db: Session, ticket_id: int, client=None):
     client = client or get_client()
     row = (db.query(JiraTicket).filter(JiraTicket.ticket_id == ticket_id)
            .order_by(JiraTicket.jira_id.desc()).first())
-    target = STATUS_MAP.get(ticket.status, "To Do")
+    target = STATUS_MAP.get(str(ticket.status), "To Do")
     escalation = (db.query(Escalation).filter(Escalation.ticket_id == ticket_id)
                   .order_by(Escalation.escalation_id.desc()).first())
     try:
         if row is None or not row.jira_issue_key:
+            mock_key = f"{getattr(client, 'project_key', 'SUP')}-{ticket.ticket_id}" if getattr(client, "mode", "") == "mock" else None
             issue = client.create_issue(_summary_of(ticket), _text_of(ticket, escalation),
-                                        labels=["supportpilot", ticket.category or "uncategorised"])
+                                        priority=ticket.priority,
+                                        labels=["supportpilot", ticket.category or "uncategorised"],
+                                        **({"key": mock_key} if mock_key and isinstance(client, MockJiraClient) else {}))
             if row is None:
                 row = JiraTicket(ticket_id=ticket_id)
                 db.add(row)
@@ -247,7 +294,8 @@ def sync_ticket(db: Session, ticket_id: int, client=None):
             created = True
         else:
             key = row.jira_issue_key
-            client.update_issue(key, summary=_summary_of(ticket), description=_text_of(ticket, escalation))
+            client.update_issue(key, summary=_summary_of(ticket), description=_text_of(ticket, escalation),
+                                priority=ticket.priority)
             remote_status = client.get_issue(key)["status"]  # pull: what Jira says right now
             created = False
 
@@ -271,3 +319,19 @@ def sync_ticket(db: Session, ticket_id: int, client=None):
 def refresh_ticket(db: Session, ticket_id: int, client=None):
     """Re-read the Jira issue and bring both sides in line (the refresh endpoint calls this)."""
     return sync_ticket(db, ticket_id, client=client)
+
+
+def refresh_all_tickets(db: Session, client=None) -> list:
+    """Refresh all Jira tickets recorded in the system."""
+    from app.models import JiraTicket
+
+    rows = db.query(JiraTicket).all()
+    results = []
+    for row in rows:
+        try:
+            synced = sync_ticket(db, row.ticket_id, client=client)
+            if synced:
+                results.append(synced)
+        except Exception as exc:
+            print(f"[jira] refresh failed for ticket {row.ticket_id}: {exc}")
+    return results

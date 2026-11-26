@@ -18,6 +18,7 @@ def wired(monkeypatch, session_factory, api):
                  "IMAP_USER", "IMAP_PASSWORD", "IMAP_ENABLED"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("JIRA_MODE", "mock")
+    monkeypatch.setenv("JIRA_PROJECT_KEY", "SUP")
     monkeypatch.setenv("EMAIL_MODE", "dry_run")
     monkeypatch.setenv("IMAP_MODE", "mock")
     monkeypatch.setenv("WEBHOOK_API_KEY", WEBHOOK_KEY)

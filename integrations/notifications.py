@@ -7,6 +7,9 @@ Feedback links ("Did this fix it?") are signed, expire after 7 days and need no 
 import hashlib
 import hmac
 import time
+from typing import Optional
+
+from sqlalchemy.orm import Session
 
 from app import config as app_config
 from app.database import SessionLocal
@@ -66,12 +69,19 @@ def _data_for(db, event: str, ticket: Ticket, context: dict, settings: cfg.Setti
         response = (db.query(TicketResponse).filter(TicketResponse.ticket_id == ticket.ticket_id)
                     .order_by(TicketResponse.response_id.desc()).first())
         steps = (response.steps or []) if response else []
+        frontend_url = settings.frontend_url
+        frontend_yes = f"{frontend_url}/tickets/{ticket.ticket_id}?feedback=yes"
+        frontend_no = f"{frontend_url}/tickets/{ticket.ticket_id}?feedback=no"
         data.update(
             response_text=(response.generated_response if response else "") or "",
+            steps=steps,
             steps_block=("Steps:\n" + "\n".join(f"  {i}. {s}" for i, s in enumerate(steps, 1)) + "\n\n")
             if steps else "",
             yes_link=feedback_link(ticket.ticket_id, "yes", settings),
             no_link=feedback_link(ticket.ticket_id, "no", settings),
+            frontend_yes_link=frontend_yes,
+            frontend_no_link=frontend_no,
+            frontend_links_block=f"Feedback: Yes ({frontend_yes}) | No ({frontend_no})\n\n",
         )
     elif event == "escalated":
         esc = (db.query(Escalation).filter(Escalation.ticket_id == ticket.ticket_id)
@@ -98,10 +108,11 @@ def _data_for(db, event: str, ticket: Ticket, context: dict, settings: cfg.Setti
     return data
 
 
-def _send_and_log(db, ticket: Ticket, to_email: str, template: str, subject: str, body: str, settings):
+def _send_and_log(db, ticket: Ticket, to_email: str, template: str, subject: str, body: str, settings,
+                   html_body: str = None):
     status, error = "failed", None
     try:
-        status = mailer.get_mailer(settings).send(to_email, subject, body, settings.email_from)
+        status = mailer.get_mailer(settings).send(to_email, subject, body, settings.email_from, html_body=html_body)
     except Exception as exc:  # a failed email must never break the ticket flow
         error = str(exc)[:1000]
         print(f"[email] {template} to {to_email} failed: {error}")
@@ -111,16 +122,22 @@ def _send_and_log(db, ticket: Ticket, to_email: str, template: str, subject: str
     return status
 
 
-def notify(event: str, ticket_id: int, **context):
-    """Build and send the email for one event, then log it. Runs in a background thread (hooks.py)."""
+def notify(event: str, ticket_id: int, db: Session = None, **context):
+    """Build and send the email for one event, then log it. Safe to run in BackgroundTasks."""
     template = EVENT_TEMPLATES.get(event)
     if template is None:
         return None
     settings = cfg.load()
-    with session_factory() as db:
-        ticket = db.get(Ticket, ticket_id)
+
+    def _do_notify(session):
+        ticket = session.get(Ticket, ticket_id)
         if ticket is None or ticket.user is None or not ticket.user.email:
             return None
-        data = _data_for(db, event, ticket, context, settings)
-        subject, body = templates.render(template, data)
-        return _send_and_log(db, ticket, ticket.user.email, template, subject, body, settings)
+        data = _data_for(session, event, ticket, context, settings)
+        subject, body, html_body = templates.render_all(template, data)
+        return _send_and_log(session, ticket, ticket.user.email, template, subject, body, settings, html_body=html_body)
+
+    if db is not None:
+        return _do_notify(db)
+    with session_factory() as session:
+        return _do_notify(session)

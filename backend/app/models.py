@@ -186,6 +186,30 @@ class JiraTicket(Base):
     jira_url = Column(String(500))
     last_updated = Column(DateTime(timezone=True), default=utcnow)
 
+    @property
+    def jira_key(self):
+        return self.jira_issue_key
+
+    @jira_key.setter
+    def jira_key(self, value):
+        self.jira_issue_key = value
+
+    @property
+    def status(self):
+        return self.jira_status
+
+    @status.setter
+    def status(self, value):
+        self.jira_status = value
+
+    @property
+    def last_synced_at(self):
+        return self.last_updated
+
+    @last_synced_at.setter
+    def last_synced_at(self, value):
+        self.last_updated = value
+
 
 class EmailLog(Base):
     """Every email the system sends (or would send in dry-run mode). Written by Role C."""
