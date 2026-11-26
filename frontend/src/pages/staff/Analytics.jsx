@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { api } from "../api";
+import { api } from "../../api";
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import {
   BarChart3, Ticket, CheckCircle2, Clock3, Users,
   RefreshCw, Download, TrendingUp, AlertTriangle
@@ -239,3 +239,5 @@ export default function Analytics() {
     </p>
   </div>;
 }
+
+

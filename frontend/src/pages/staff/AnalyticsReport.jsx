@@ -4,7 +4,7 @@ import {
   Activity, ShieldAlert, Bot, Star, Repeat2, RefreshCw,
   TrendingUp, Clock3, CheckCircle2, AlertCircle, BarChart3
 } from 'lucide-react';
-import { analyticsApi } from '../api';
+import { analyticsApi } from '../../api';
 
 const C = {
   ink: '#211747', muted: '#77718f', purple: '#7048e8',
@@ -237,3 +237,5 @@ export default function AnalyticsReport() {
     </>}
   </div>;
 }
+
+

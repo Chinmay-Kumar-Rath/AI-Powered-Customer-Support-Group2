@@ -1,4 +1,4 @@
-﻿
+
 
 import React from "react";
 import {
@@ -27,21 +27,21 @@ const AdminDashboard = ({
   const cards = [
     {
       label: "Total Tickets",
-      value: stats?.total_tickets ?? "â€”",
-      detail: `${stats?.tickets_today ?? "â€”"} created today`,
+      value: stats?.total_tickets ?? "—",
+      detail: `${stats?.tickets_today ?? "—"} created today`,
       icon: Ticket,
       color: "violet",
     },
     {
       label: "Open Escalations",
-      value: escalation.open ?? "â€”",
-      detail: `${escalation.unassigned ?? "â€”"} unassigned`,
+      value: escalation.open ?? "—",
+      detail: `${escalation.unassigned ?? "—"} unassigned`,
       icon: Zap,
       color: "orange",
     },
     {
       label: "SLA Breaches",
-      value: escalation.sla_breached ?? "â€”",
+      value: escalation.sla_breached ?? "—",
       detail: "Require attention",
       icon: Clock,
       color: "rose",
@@ -51,7 +51,7 @@ const AdminDashboard = ({
       value:
         feedback.satisfaction_pct != null
           ? `${feedback.satisfaction_pct}%`
-          : "â€”",
+          : "—",
       detail:
         feedback.avg_rating != null
           ? `${feedback.avg_rating} / 5 average rating`
@@ -130,12 +130,12 @@ const AdminDashboard = ({
 
             <div className="admin-metric-row">
               <span>Total tickets</span>
-              <strong>{stats?.total_tickets ?? "â€”"}</strong>
+              <strong>{stats?.total_tickets ?? "—"}</strong>
             </div>
 
             <div className="admin-metric-row">
               <span>Created today</span>
-              <strong>{stats?.tickets_today ?? "â€”"}</strong>
+              <strong>{stats?.tickets_today ?? "—"}</strong>
             </div>
 
             <div className="admin-metric-row">
@@ -143,7 +143,7 @@ const AdminDashboard = ({
               <strong>
                 {stats?.avg_processing_ms != null
                   ? `${stats.avg_processing_ms} ms`
-                  : "â€”"}
+                  : "—"}
               </strong>
             </div>
           </article>
@@ -158,23 +158,23 @@ const AdminDashboard = ({
 
             <div className="admin-metric-row">
               <span>Total escalations</span>
-              <strong>{escalation.total ?? "â€”"}</strong>
+              <strong>{escalation.total ?? "—"}</strong>
             </div>
 
             <div className="admin-metric-row">
               <span>Open escalations</span>
-              <strong>{escalation.open ?? "â€”"}</strong>
+              <strong>{escalation.open ?? "—"}</strong>
             </div>
 
             <div className="admin-metric-row">
               <span>Unassigned</span>
-              <strong>{escalation.unassigned ?? "â€”"}</strong>
+              <strong>{escalation.unassigned ?? "—"}</strong>
             </div>
 
             <div className="admin-metric-row">
               <span>SLA breached</span>
               <strong className="admin-danger">
-                {escalation.sla_breached ?? "â€”"}
+                {escalation.sla_breached ?? "—"}
               </strong>
             </div>
           </article>
@@ -189,12 +189,12 @@ const AdminDashboard = ({
 
             <div className="admin-metric-row">
               <span>Knowledge articles</span>
-              <strong>{ragStats?.kb_articles ?? "â€”"}</strong>
+              <strong>{ragStats?.kb_articles ?? "—"}</strong>
             </div>
 
             <div className="admin-metric-row">
               <span>Responses generated</span>
-              <strong>{ragStats?.responses_generated ?? "â€”"}</strong>
+              <strong>{ragStats?.responses_generated ?? "—"}</strong>
             </div>
 
             <div className="admin-metric-row">
@@ -202,7 +202,7 @@ const AdminDashboard = ({
               <strong>
                 {ragStats?.avg_confidence != null
                   ? `${(ragStats.avg_confidence * 100).toFixed(1)}%`
-                  : "â€”"}
+                  : "—"}
               </strong>
             </div>
 
@@ -211,7 +211,7 @@ const AdminDashboard = ({
               <strong>
                 {ragStats?.needs_human_review_pct != null
                   ? `${ragStats.needs_human_review_pct}%`
-                  : "â€”"}
+                  : "—"}
               </strong>
             </div>
           </article>
@@ -226,7 +226,7 @@ const AdminDashboard = ({
 
             <div className="admin-metric-row">
               <span>Feedback responses</span>
-              <strong>{feedback.responses ?? "â€”"}</strong>
+              <strong>{feedback.responses ?? "—"}</strong>
             </div>
 
             <div className="admin-metric-row">
@@ -234,7 +234,7 @@ const AdminDashboard = ({
               <strong>
                 {feedback.fixed_issue_pct != null
                   ? `${feedback.fixed_issue_pct}%`
-                  : "â€”"}
+                  : "—"}
               </strong>
             </div>
 
@@ -243,7 +243,7 @@ const AdminDashboard = ({
               <strong>
                 {feedback.avg_rating != null
                   ? `${feedback.avg_rating} / 5`
-                  : "â€”"}
+                  : "—"}
               </strong>
             </div>
           </article>
@@ -290,11 +290,12 @@ const AdminDashboard = ({
         </div>
       </section>
       <footer className="admin-footer">
-        SupportPilot Â· Administration workspace
+        SupportPilot · Administration workspace
       </footer>
     </main>
   );
 };
 
 export default AdminDashboard;
+
 

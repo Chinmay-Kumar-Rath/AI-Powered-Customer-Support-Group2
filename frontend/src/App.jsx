@@ -1,27 +1,28 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppShell from './components/AppShell';
 
-import { Login, Register } from './pages/AuthPages';
-import EmployeeDashboard from './pages/EmployeeDashboard';
-import EmployeeTickets from './pages/EmployeeTickets';
-import CreateTicket from './pages/CreateTicket';
-import TicketDetail from './pages/TicketDetail';
-import KnowledgeBase from './pages/KnowledgeBase';
+import { Login, Register } from './pages/auth/AuthPages';
+import EmployeeDashboard from './pages/user/EmployeeDashboard';
+import EmployeeTickets from './pages/user/EmployeeTickets';
+import CreateTicket from './pages/user/CreateTicket';
+import TicketDetail from './pages/user/TicketDetail';
+import KnowledgeBase from './pages/shared/KnowledgeBase';
 
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/staff/AdminDashboard';
 import AdminDashboardContainer from './pages/admin/AdminDashboardContainer';
-import AdminTickets from './pages/AdminTickets';
-import AdminTicketDetail from './pages/AdminTicketDetail';
-import RagMetrics from './pages/RagMetrics';
+import AdminTickets from './pages/staff/AdminTickets';
+import AdminTicketDetail from './pages/staff/AdminTicketDetail';
+import RagMetrics from './pages/staff/RagMetrics';
 
-import Analytics from './pages/Analytics';
-import AnalyticsReport from './pages/AnalyticsReport';
-import Escalations from './pages/Escalations';
-import Users from './pages/Users';
-import Integrations from './pages/Integrations';
+import Analytics from './pages/staff/Analytics';
+import AnalyticsReport from './pages/staff/AnalyticsReport';
+import Escalations from './pages/staff/Escalations';
+import Users from './pages/admin/Users';
+import Integrations from './pages/staff/Integrations';
 
 function Home() {
   const { user, loading } = useAuth();
